@@ -44,14 +44,20 @@ tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experime
 tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train. 0 means train indefinitely")
 
 # Hyperparameters
-tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
+tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.") # Try hyper-param tuning
 tf.app.flags.DEFINE_float("max_gradient_norm", 5.0, "Clip gradients to this norm.")
-tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on non-recurrent connections.")
-tf.app.flags.DEFINE_integer("batch_size", 100, "Batch size to use")
-tf.app.flags.DEFINE_integer("hidden_size", 200, "Size of the hidden states")
+tf.app.flags.DEFINE_float("dropout", 0.15, "Fraction of units randomly dropped on non-recurrent connections.") # Try hyper-param tuning 
+tf.app.flags.DEFINE_integer("batch_size", 50, "Batch size to use")
+tf.app.flags.DEFINE_integer("hidden_size", 200, "Size of the hidden states") # Try hyper-param tuning
+tf.app.flags.DEFINE_integer("char_embedding_size", 8, "Size of character embedding vector")
+tf.app.flags.DEFINE_integer("char_window_len", 5, "Size of character window")
+tf.app.flags.DEFINE_integer("char_filter_size", 100, "Size of character-word representation vector") # Try hyper-param tuning
+tf.app.flags.DEFINE_integer("char_vocab_size", 129, "Count of distinct characters in the corpus")
 tf.app.flags.DEFINE_integer("context_len", 600, "The maximum context length of your model")
+tf.app.flags.DEFINE_integer("word_len", 20, "The maximum permissible number of characters in a word")
 tf.app.flags.DEFINE_integer("question_len", 30, "The maximum question length of your model")
-tf.app.flags.DEFINE_integer("embedding_size", 100, "Size of the pretrained word vectors. This needs to be one of the available GloVe dimensions: 50/100/200/300")
+tf.app.flags.DEFINE_integer("embedding_size", 100, "Size of the pretrained word vectors. This needs to be one of the available GloVe dimensions: 50/100/200/300") # Try hyper-param tuning
+
 
 # How often to print, save, eval
 tf.app.flags.DEFINE_integer("print_every", 1, "How many iterations to do per print.")

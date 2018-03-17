@@ -20,6 +20,186 @@ from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.ops import rnn_cell
 
 
+class CoAttention(object):
+    """Module for basic attention.
+
+    Note: in this module we use the terminology of "keys" and "values" (see lectures).
+    In the terminology of "X attends to Y", "keys attend to values".
+
+    In the baseline model, the keys are the context hidden states
+    and the values are the question hidden states.
+
+    We choose to use general terminology of keys and values in this module
+    (rather than context and question) to avoid confusion if you reuse this
+    module with other inputs.
+    """
+
+    def __init__(self, keep_prob, key_vec_size, value_vec_size, batch_size):
+        """
+        Inputs:
+          keep_prob: tensor containing a single scalar that is the keep probability (for dropout)
+          key_vec_size: size of the key vectors. int
+          value_vec_size: size of the value vectors. int
+        """
+        self.keep_prob = keep_prob
+        self.key_vec_size = key_vec_size
+        self.value_vec_size = value_vec_size
+        self.batch_size = batch_size
+
+    def build_graph(self, values, values_mask, keys, keys_mask):
+        """
+        Keys attend to values.
+        For each key, return an attention distribution and an attention output vector.
+
+        Inputs:
+          values: Tensor shape (batch_size, num_values, value_vec_size).
+          values_mask: Tensor shape (batch_size, num_values).
+            1s where there's real input, 0s where there's padding
+          keys: Tensor shape (batch_size, num_keys, key_vec_size)
+          keys_mask: Tensor shape (batch_size, num_keys).
+
+        Outputs:
+          c2q_attn : Tensor shape (batch_size, num_values, value_vec_size)
+          q2c_attn : Tensor shape (batch_size, num_values, value_vec_size)
+        """
+        with vs.variable_scope("CoAttention"):
+
+            values_proj = tf.layers.dense( values, self.value_vec_size , activation = tf.nn.tanh )
+
+            keys_batch , num_keys , keys_vector_size = keys.get_shape()
+            values_batch , num_values , values_vector_size = values.get_shape()
+
+
+
+            keys = tf.pad(keys, [[0,0],[0,1],[0,0]] , mode =  "CONSTANT" , constant_values = 0.0)
+            values_proj = tf.pad(values_proj, [[0,0],[0,1],[0,0]] , mode =  "CONSTANT" , constant_values = 0.0)
+
+
+            #keys_sentinel = tf.get_variable( name = "keys_sentinel" , shape = (1, 1, keys_vector_size)  , dtype = tf.float32)
+            #keys_sentinel_batch = tf.tile ( keys_sentinel , [self.batch_size, 1, 1] )
+            #keys = tf.concat([keys, keys_sentinel_batch], axis = 1)
+
+            #values_sentinel = tf.get_variable( name = "values_sentinel" , shape = (1, 1, values_vector_size)  , dtype = tf.float32)
+            #value_proj_batch = tf.tile ( values_sentinel , [self.batch_size, 1, 1] )
+            #values_proj = tf.concat([values_proj, value_proj_batch], axis = 1)
+
+            #values_sentinel = tf.zeros( name = "values_sentinel" , shape = [values_batch, 1, values_vector_size]  , dtype = tf.float32)
+
+            #keys_sentinel_mask = tf.zeros( shape = (keys_batch, 1)  , dtype = tf.float32)
+            #values_sentinel_mask = tf.zero( shape = (values_batch, 1)  , dtype = tf.float32)
+
+            #values_proj = tf.concat ( [values_proj, values_sentinel] , axis = 1)
+            #keys = tf.concat ( [keys, keys_sentinel] , axis = 1)
+
+
+            values_mask = tf.pad(values_mask, [[0,0],[0,1]] , mode =  "CONSTANT" , constant_values = 0.0)
+            keys_mask =  tf.pad(keys_mask, [[0,0],[0,1]] , mode =  "CONSTANT" , constant_values = 0.0)
+
+            #keys_mask_zeroes = tf.zeros(  shape = (1, 1)  , dtype = tf.int32)
+            #keys_mask_zeroes_batch = tf.tile ( keys_mask_zeroes , [self.batch_size, 1] )
+            #keys_mask = tf.concat([keys_mask, keys_mask_zeroes_batch], axis = 1)
+
+            #values_mask_zeroes = tf.zeros(  shape = (1, 1)  , dtype = tf.int32)
+            #values_mask_zeroes_batch = tf.tile ( values_mask_zeroes , [self.batch_size, 1] )
+            #values_mask = tf.concat([values_mask, values_mask_zeroes_batch], axis = 1)
+
+            values_proj_t = tf.transpose(values_proj, perm=[0, 2, 1])
+
+
+
+            affinity_score_matrix = tf.matmul ( keys, values_proj_t )  #(batch_size, num_keys, num_values)
+
+
+            _ , alpha_dist = masked_softmax (affinity_score_matrix , tf.expand_dims( values_mask, 1 ) , 2 ) # shape (batch_size, num_keys) ; dist along values
+
+            c2q_attn = tf.matmul(alpha_dist, values_proj) # shape (batch_size, num_keys, value_vec_size)
+            c2q_attn = tf.nn.dropout(c2q_attn, self.keep_prob)
+
+
+
+            _ , beta_dist = masked_softmax (affinity_score_matrix , tf.expand_dims( keys_mask, 2), 1 ) # shape (batch_size, num_keys) ; dist along keys
+            print beta_dist.get_shape()
+            beta_dist_t = tf.transpose(beta_dist, perm=[0, 2, 1])
+
+            q2c_attn = tf.matmul(beta_dist_t, keys) # shape (batch_size, num_keys, value_vec_size)
+            q2c_attn = tf.nn.dropout(q2c_attn, self.keep_prob)
+
+            second_level_attention_output = tf.matmul(alpha_dist, q2c_attn)
+            second_level_attention_output = tf.nn.dropout(second_level_attention_output, self.keep_prob)
+
+            rnn_cell_fw = rnn_cell.LSTMCell(self.key_vec_size)
+            rnn_cell_fw = DropoutWrapper(rnn_cell_fw, input_keep_prob=self.keep_prob)
+        
+            rnn_cell_bw = rnn_cell.LSTMCell(self.key_vec_size)
+            rnn_cell_bw = DropoutWrapper(rnn_cell_bw, input_keep_prob=self.keep_prob)
+
+            lstm_input = tf.concat([c2q_attn, second_level_attention_output], axis=2)
+            (fw_out, bw_out), _ = tf.nn.bidirectional_dynamic_rnn( rnn_cell_fw , rnn_cell_bw , lstm_input, None, dtype=tf.float32 , scope = "layer1")
+
+            # Concatenate the forward and backward hidden states
+            out_lstm = tf.concat([fw_out, bw_out], 2)
+
+            return out_lstm , keys_mask
+
+class ModelingLayer(object):
+    def __init__(self, hidden_size, keep_prob):
+        """
+        Inputs:
+          hidden_size: int. Hidden size of the RNN
+          keep_prob: Tensor containing a single scalar that is the keep probability (for dropout)
+        """
+        self.hidden_size = hidden_size
+        self.keep_prob = keep_prob
+        
+        #self.rnn_cell_fw = rnn_cell.GRUCell(self.hidden_size)
+        self.rnn_cell_fw_layer1 = rnn_cell.LSTMCell(self.hidden_size)
+        self.rnn_cell_fw_layer1 = DropoutWrapper(self.rnn_cell_fw_layer1, input_keep_prob=self.keep_prob)
+        
+        #self.rnn_cell_bw = rnn_cell.GRUCell(self.hidden_size)
+        self.rnn_cell_bw_layer1 = rnn_cell.LSTMCell(self.hidden_size)
+        self.rnn_cell_bw_layer1 = DropoutWrapper(self.rnn_cell_bw_layer1, input_keep_prob=self.keep_prob)
+
+        self.rnn_cell_fw_layer2 = rnn_cell.LSTMCell(self.hidden_size)
+        self.rnn_cell_fw_layer2 = DropoutWrapper(self.rnn_cell_fw_layer2, input_keep_prob=self.keep_prob)
+        
+        self.rnn_cell_bw_layer2 = rnn_cell.LSTMCell(self.hidden_size)
+        self.rnn_cell_bw_layer2 = DropoutWrapper(self.rnn_cell_bw_layer2, input_keep_prob=self.keep_prob)
+
+
+    def build_graph(self, inputs, masks , masks2):
+        """
+        Inputs:
+          inputs: Tensor shape (batch_size, seq_len, input_size)
+          masks: Tensor shape (batch_size, seq_len).
+            Has 1s where there is real input, 0s where there's padding.
+            This is used to make sure tf.nn.bidirectional_dynamic_rnn doesn't iterate through masked steps.
+
+        Returns:
+          out: Tensor shape (batch_size, seq_len, hidden_size*2).
+            This is all hidden states (fw and bw hidden states are concatenated).
+        """
+        with vs.variable_scope("ModelingLayer"):
+
+            # Note: fw_out and bw_out are the hidden states for every timestep.
+            # Each is shape (batch_size, seq_len, hidden_size).
+            (fw_out_layer1, bw_out_layer1), _ = tf.nn.bidirectional_dynamic_rnn(self.rnn_cell_fw_layer1, self.rnn_cell_bw_layer1, inputs, None, dtype=tf.float32 , scope = "layer1")
+
+            # Concatenate the forward and backward hidden states
+            out_layer1 = tf.concat([fw_out_layer1, bw_out_layer1], 2)
+
+            # Apply dropout
+            # out_layer1 = tf.nn.dropout(out_layer1, self.keep_prob)
+
+            (fw_out_layer2, bw_out_layer2), _ = tf.nn.bidirectional_dynamic_rnn(self.rnn_cell_fw_layer2, self.rnn_cell_bw_layer2, out_layer1, None, dtype=tf.float32, scope = "layer2")
+
+            # Concatenate the forward and backward hidden states
+            out_layer2 = tf.concat([fw_out_layer2, bw_out_layer2], 2)
+
+            # Apply dropout
+            #out_layer2 = tf.nn.dropout(out_layer2, self.keep_prob)
+
+            return out_layer2   
+
 class RNNEncoder(object):
     """
     General-purpose module to encode a sequence using a RNN.
@@ -44,9 +224,15 @@ class RNNEncoder(object):
         """
         self.hidden_size = hidden_size
         self.keep_prob = keep_prob
-        self.rnn_cell_fw = rnn_cell.GRUCell(self.hidden_size)
+        
+        #self.rnn_cell_fw = rnn_cell.GRUCell(self.hidden_size)
+        self.rnn_cell_fw = rnn_cell.LSTMCell(self.hidden_size)
+
         self.rnn_cell_fw = DropoutWrapper(self.rnn_cell_fw, input_keep_prob=self.keep_prob)
-        self.rnn_cell_bw = rnn_cell.GRUCell(self.hidden_size)
+        
+        #self.rnn_cell_bw = rnn_cell.GRUCell(self.hidden_size)
+        self.rnn_cell_bw = rnn_cell.LSTMCell(self.hidden_size)
+
         self.rnn_cell_bw = DropoutWrapper(self.rnn_cell_bw, input_keep_prob=self.keep_prob)
 
     def build_graph(self, inputs, masks):
@@ -114,6 +300,98 @@ class SimpleSoftmaxLayer(object):
 
             return masked_logits, prob_dist
 
+
+class BidirectionalAttn(object):
+    """Module for basic attention.
+
+    Note: in this module we use the terminology of "keys" and "values" (see lectures).
+    In the terminology of "X attends to Y", "keys attend to values".
+
+    In the baseline model, the keys are the context hidden states
+    and the values are the question hidden states.
+
+    We choose to use general terminology of keys and values in this module
+    (rather than context and question) to avoid confusion if you reuse this
+    module with other inputs.
+    """
+
+    def __init__(self, keep_prob, key_vec_size, value_vec_size):
+        """
+        Inputs:
+          keep_prob: tensor containing a single scalar that is the keep probability (for dropout)
+          key_vec_size: size of the key vectors. int
+          value_vec_size: size of the value vectors. int
+        """
+        self.keep_prob = keep_prob
+        self.key_vec_size = key_vec_size
+        self.value_vec_size = value_vec_size
+
+    def build_graph(self, values, values_mask, keys, keys_mask):
+        """
+        Keys attend to values.
+        For each key, return an attention distribution and an attention output vector.
+
+        Inputs:
+          values: Tensor shape (batch_size, num_values, value_vec_size).
+          values_mask: Tensor shape (batch_size, num_values).
+            1s where there's real input, 0s where there's padding
+          keys: Tensor shape (batch_size, num_keys, key_vec_size)
+          keys_mask: Tensor shape (batch_size, num_keys).
+
+        Outputs:
+          c2q_attn : Tensor shape (batch_size, num_values, value_vec_size)
+          q2c_attn : Tensor shape (batch_size, num_values, value_vec_size)
+        """
+        with vs.variable_scope("BidirectionalAttn"):
+
+            # Calculate attention distribution
+            _ , num_keys , _  = keys.get_shape()
+            _ , num_values , _  = values.get_shape()
+
+
+            weights_similarity_1 = tf.get_variable( name = "w_sim1" , shape = (1 , 1 , self.key_vec_size)  , dtype = tf.float32) #  shape : (batch_size, num_keys, key_vec_size)
+            weights_similarity_2 = tf.get_variable( name = "w_sim2" , shape = (1 , 1 , self.value_vec_size)  , dtype = tf.float32) #  shape : (batch_size, num_values, value_vec_size)
+            weights_similarity_3 = tf.get_variable( name = "w_sim3" , shape = (1 , 1 , self.key_vec_size)  , dtype = tf.float32) #  shape : (batch_size, num_keys, key_vec_size)
+
+            keys_mod = keys * weights_similarity_1  # shape : (batch_size, num_keys, key_vec_size)
+            keys_mod_sum = tf.reduce_sum( keys_mod , 2) * tf.to_float(keys_mask) # shape : (batch_size, num_keys)
+
+
+            values_mod = values * weights_similarity_2  #  shape : (batch_size, num_values, value_vec_size)
+            values_mod_sum = tf.reduce_sum( values_mod , 2) * tf.to_float(values_mask) #  shape : (batch_size, num_values)
+
+            key_value = tf.reduce_sum( tf.multiply (    tf.tile( tf.expand_dims( (keys * weights_similarity_3), 2) ,
+                                                                 [1,1,num_values,1] ) ,  
+
+                                                    tf.expand_dims(values, 1)
+                                      ) , axis = 3 ) #  shape : (batch_size, num_keys, num_values)
+
+            weighted_score_matrix = ( tf.tile( tf.expand_dims( keys_mod_sum , 2) , [1,1,num_values] ) + 
+                                      tf.tile( tf.expand_dims( values_mod_sum , 1) , [1,num_keys,1] ) +
+                                      key_value 
+                                    ) #  shape : (batch_size, num_keys, num_values)
+
+            key_value_mask = tf.expand_dims(keys_mask, 2) * tf.expand_dims(values_mask, 1)
+            weighted_score_matrix = weighted_score_matrix * tf.to_float(key_value_mask)
+
+            weighted_score_matrix_max = tf.reduce_max( weighted_score_matrix , axis = 2) # shape (batch_size, num_keys)
+            _ , beta_dist = masked_softmax (weighted_score_matrix_max , keys_mask , 1 ) # shape (batch_size, num_keys) ; dist along keys
+ 
+            beta_dist = tf.expand_dims(beta_dist, 2) # shape (batch_size, num_keys, 1)
+
+            q2c_attn = tf.reduce_sum( tf.multiply(beta_dist, keys) , axis = 1 ) # shape (batch_size, key_vec_size)
+            q2c_attn = tf.nn.dropout(q2c_attn, self.keep_prob)
+
+            #weighted_score_matrix_value_mask = tf.expand_dims(values_mask, 1) # shape (batch_size, 1, num_values)
+            _, attn_dist = masked_softmax(weighted_score_matrix , key_value_mask, 2) # shape (batch_size, num_keys, num_values); distribution along value for every key
+
+            # Use attention distribution to take weighted sum of values
+            c2q_attn = tf.matmul(attn_dist, values) # shape (batch_size, num_keys, value_vec_size)
+
+            # Apply dropout
+            c2q_attn = tf.nn.dropout(c2q_attn, self.keep_prob)
+
+            return c2q_attn , q2c_attn
 
 class BasicAttn(object):
     """Module for basic attention.
