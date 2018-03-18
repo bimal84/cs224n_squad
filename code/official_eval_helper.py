@@ -47,6 +47,21 @@ def tokens_char_ids(tokens, word_len):
     return [(t + [char_pad_ID]* word_len)[0:word_len] for t in tmp]
 
 
+def padded_charId(token_batch, token_id_batch, word_len, batch_pad=0):
+    """
+    Inputs:
+      token_batch: List (length batch size) of lists of ints.
+      token_id_batch: List (length batch size) of lists of list ints.
+      batch_pad: Int. Length to pad to. If 0, pad to maximum length sequence in token_batch.
+    Returns:
+      List (length batch_size) of padded of lists of ints.
+        All are same length - batch_pad if batch_pad!=0, otherwise the maximum length in token_batch
+    """
+    char_pad_ID = 129 # Value to be be changed if ever a larger char vocab were used
+    maxlen = max(map(lambda x: len(x), token_batch)) if batch_pad == 0 else batch_pad
+    return map(lambda token_id_list: token_id_list + [[char_pad_ID] * word_len] * (maxlen - len(token_id_list)), token_id_batch)
+
+
 def refill_batches(batches, word2id, qn_uuid_data, context_token_data, qn_token_data, batch_size, context_len, question_len, word_len):
     """
     This is similar to refill_batches in data_batcher.py, but:
