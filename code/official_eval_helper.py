@@ -168,11 +168,6 @@ def get_batch_generator(word2id, qn_uuid_data, context_token_data, qn_token_data
         context_char_ids = np.array(context_char_ids) # shape (question_len, batch_size, word_len)
         context_mask = (context_ids != PAD_ID).astype(np.int32)
 
-        if np.any(np.equal(context_char_ids, None)) :
-            print "None context_ids" , context_char_ids
-
-        if np.any(np.equal(qn_char_ids, None)) :
-            print "None char ids" , qn_char_ids
 
         # Make into a Batch object
         batch = Batch(context_ids, context_mask, context_tokens, qn_ids, qn_mask, None, qn_char_ids, context_char_ids, ans_span=None, ans_tokens=None, uuids=uuids)
