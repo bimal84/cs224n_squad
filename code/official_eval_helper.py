@@ -60,7 +60,7 @@ def padded_charId(token_batch, token_id_batch, word_len, batch_pad=0):
     char_pad_ID = 128 # Value to be be changed if ever a larger char vocab were used
     maxlen = max(map(lambda x: len(x), token_batch)) if batch_pad == 0 else batch_pad
     char_out = map(lambda token_id_list: token_id_list + [[char_pad_ID] * word_len] * (maxlen - len(token_id_list)), token_id_batch)
-    print char_out
+    return char_out
 
 
 def refill_batches(batches, word2id, qn_uuid_data, context_token_data, qn_token_data, batch_size, context_len, question_len, word_len):
@@ -153,6 +153,8 @@ def get_batch_generator(word2id, qn_uuid_data, context_token_data, qn_token_data
         qn_ids = padded(qn_ids, question_len) # pad questions to length question_len
         context_ids = padded(context_ids, context_len) # pad contexts to length context_len
 
+
+
         qn_char_ids = padded_charId(qn_ids, qn_char_ids, word_len, question_len)
         context_char_ids = padded_charId(context_ids, context_char_ids, word_len, context_len)
 
@@ -166,8 +168,16 @@ def get_batch_generator(word2id, qn_uuid_data, context_token_data, qn_token_data
         context_char_ids = np.array(context_char_ids) # shape (question_len, batch_size, word_len)
         context_mask = (context_ids != PAD_ID).astype(np.int32)
 
+        if np.any(np.equal(context_char_ids, None)) :
+            print "None context_ids" , context_char_ids
+
+        if np.any(np.equal(qn_char_ids, None)) :
+            print "None char ids" , qn_char_ids
+
         # Make into a Batch object
         batch = Batch(context_ids, context_mask, context_tokens, qn_ids, qn_mask, None, qn_char_ids, context_char_ids, ans_span=None, ans_tokens=None, uuids=uuids)
+
+        #def __init__(self, context_ids, context_mask, context_tokens, qn_ids, qn_mask, qn_tokens, qn_char_ids, context_char_ids , ans_span, ans_tokens, uuids=None):
 
         yield batch
 
