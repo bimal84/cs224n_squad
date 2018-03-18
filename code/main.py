@@ -56,7 +56,7 @@ tf.app.flags.DEFINE_integer("char_vocab_size", 129, "Count of distinct character
 tf.app.flags.DEFINE_integer("context_len", 600, "The maximum context length of your model")
 tf.app.flags.DEFINE_integer("word_len", 20, "The maximum permissible number of characters in a word")
 tf.app.flags.DEFINE_integer("question_len", 30, "The maximum question length of your model")
-tf.app.flags.DEFINE_integer("embedding_size", 100, "Size of the pretrained word vectors. This needs to be one of the available GloVe dimensions: 50/100/200/300") # Try hyper-param tuning
+tf.app.flags.DEFINE_integer("embedding_size", 300, "Size of the pretrained word vectors. This needs to be one of the available GloVe dimensions: 50/100/200/300") # Try hyper-param tuning
 
 
 # How often to print, save, eval
