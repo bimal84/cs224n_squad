@@ -42,7 +42,7 @@ def readnext(x):
 def tokens_char_ids(tokens, word_len):
     """ Converts character into ASCII Id
     """
-    char_pad_ID = 129
+    char_pad_ID = 128
     tmp = [[ord(c) for c in word] for word in tokens]
     return [(t + [char_pad_ID]* word_len)[0:word_len] for t in tmp]
 
@@ -57,7 +57,7 @@ def padded_charId(token_batch, token_id_batch, word_len, batch_pad=0):
       List (length batch_size) of padded of lists of ints.
         All are same length - batch_pad if batch_pad!=0, otherwise the maximum length in token_batch
     """
-    char_pad_ID = 129 # Value to be be changed if ever a larger char vocab were used
+    char_pad_ID = 128 # Value to be be changed if ever a larger char vocab were used
     maxlen = max(map(lambda x: len(x), token_batch)) if batch_pad == 0 else batch_pad
     char_out = map(lambda token_id_list: token_id_list + [[char_pad_ID] * word_len] * (maxlen - len(token_id_list)), token_id_batch)
     return char_out
