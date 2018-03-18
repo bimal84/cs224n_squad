@@ -43,7 +43,7 @@ def tokens_char_ids(tokens, word_len):
     """ Converts character into ASCII Id
     """
     char_pad_ID = 128
-    tmp = [[ord(c) for c in word] for word in tokens]
+    tmp = [[ ord(c) if ord(c) >=0 and ord(c)<= 127 else 128 for c in word] for word in tokens]
     return [(t + [char_pad_ID]* word_len)[0:word_len] for t in tmp]
 
 
