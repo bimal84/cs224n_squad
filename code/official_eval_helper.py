@@ -59,7 +59,8 @@ def padded_charId(token_batch, token_id_batch, word_len, batch_pad=0):
     """
     char_pad_ID = 128 # Value to be be changed if ever a larger char vocab were used
     maxlen = max(map(lambda x: len(x), token_batch)) if batch_pad == 0 else batch_pad
-    return map(lambda token_id_list: token_id_list + [[char_pad_ID] * word_len] * (maxlen - len(token_id_list)), token_id_batch)
+    char_out = map(lambda token_id_list: token_id_list + [[char_pad_ID] * word_len] * (maxlen - len(token_id_list)), token_id_batch)
+    print char_out
 
 
 def refill_batches(batches, word2id, qn_uuid_data, context_token_data, qn_token_data, batch_size, context_len, question_len, word_len):
