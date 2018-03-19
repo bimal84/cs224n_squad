@@ -206,6 +206,55 @@ def main(unused_argv):
                 print "Wrote predictions to %s" % FLAGS.json_out_path
 
 
+
+    elif FLAGS.mode == "official_eval_ensemble":
+        if FLAGS.json_in_path == "":
+            raise Exception("For official_eval mode, you need to specify --json_in_path")
+        if FLAGS.ckpt_load_dir == "":
+            raise Exception("For official_eval mode, you need to specify --ckpt_load_dir")
+
+        # Read the JSON data from file
+        qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
+
+        with tf.Session(config=config) as sess:
+
+            # Load model from ckpt_load_dir
+            initialize_model(sess, qa_model, FLAGS.ckpt_load_dir1, expect_exists=True)
+
+            # Get a predicted answer for each example in the data
+            # Return a mapping answers_dict from uuid to answer
+            answers_dict1 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+
+            # Load model from ckpt_load_dir
+            initialize_model(sess, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
+            answers_dict2 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+
+            initialize_model(sess, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
+            answers_dict3 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+
+            initialize_model(sess, qa_model, FLAGS.ckpt_load_dir4, expect_exists=True)
+            answers_dict4 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+
+
+            new_answer_dict = {}
+
+            for key, value in answers_dict1.iteritems():
+
+                answer1 = value
+                answer2 = answers_dict2[key]
+                answer3 = answers_dict3[key]
+                answer4 = answers_dict4[key]
+
+                answer = most_common( [answer1, answer2 , answer3 , answer4])
+                new_answer_dict[key] = answer
+
+
+            # Write the uuid->answer mapping a to json file in root dir
+            print "Writing predictions to %s..." % FLAGS.json_out_path
+            with io.open(FLAGS.json_out_path, 'w', encoding='utf-8') as f:
+                f.write(unicode(json.dumps(new_answer_dict, ensure_ascii=False)))
+                print "Wrote predictions to %s" % FLAGS.json_out_path
+
     else:
         raise Exception("Unexpected value of FLAGS.mode: %s" % FLAGS.mode)
 
