@@ -214,8 +214,14 @@ def main(unused_argv):
     elif FLAGS.mode == "official_eval_ensemble":
         if FLAGS.json_in_path == "":
             raise Exception("For official_eval mode, you need to specify --json_in_path")
-        if FLAGS.ckpt_load_dir == "":
-            raise Exception("For official_eval mode, you need to specify --ckpt_load_dir")
+        if FLAGS.ckpt_load_dir1 == "":
+            raise Exception("For official_eval mode, you need to specify --ckpt_load_dir1")
+        if FLAGS.ckpt_load_dir2 == "":
+            raise Exception("For official_eval mode, you need to specify --ckpt_load_dir2")
+        if FLAGS.ckpt_load_dir3 == "":
+            raise Exception("For official_eval mode, you need to specify --ckpt_load_dir3")
+        if FLAGS.ckpt_load_dir4 == "":
+            raise Exception("For official_eval mode, you need to specify --ckpt_load_dir4")
 
         # Read the JSON data from file
         qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
