@@ -73,6 +73,10 @@ tf.app.flags.DEFINE_string("ckpt_load_dir", "", "For official_eval mode, which d
 tf.app.flags.DEFINE_string("json_in_path", "", "For official_eval mode, path to JSON input file. You need to specify this for official_eval_mode.")
 tf.app.flags.DEFINE_string("json_out_path", "predictions.json", "Output path for official_eval mode. Defaults to predictions.json")
 
+tf.app.flags.DEFINE_string("ckpt_load_dir1", "", "For official_eval_ensemble mode, which directory to load the checkpoint fron. You need to specify this for official_eval_ensemble mode.")
+tf.app.flags.DEFINE_string("ckpt_load_dir2", "", "For official_eval_ensemble mode, which directory to load the checkpoint fron. You need to specify this for official_eval_ensemble mode.")
+tf.app.flags.DEFINE_string("ckpt_load_dir3", "", "For official_eval_ensemble mode, which directory to load the checkpoint fron. You need to specify this for official_eval_ensemble mode.")
+tf.app.flags.DEFINE_string("ckpt_load_dir4", "", "For official_eval_ensemble mode, which directory to load the checkpoint fron. You need to specify this for official_eval_ensemble mode.")
 
 FLAGS = tf.app.flags.FLAGS
 os.environ["CUDA_VISIBLE_DEVICES"] = str(FLAGS.gpu)
@@ -117,7 +121,7 @@ def main(unused_argv):
     print "This code was developed and tested on TensorFlow 1.4.1. Your TensorFlow version: %s" % tf.__version__
 
     # Define train_dir
-    if not FLAGS.experiment_name and not FLAGS.train_dir and FLAGS.mode != "official_eval":
+    if not FLAGS.experiment_name and not FLAGS.train_dir and FLAGS.mode != "official_eval" and FLAGS.mode != "official_eval_ensemble":
         raise Exception("You need to specify either --experiment_name or --train_dir")
     FLAGS.train_dir = FLAGS.train_dir or os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
 
