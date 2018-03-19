@@ -250,7 +250,7 @@ def main(unused_argv):
         with tf.Session(config=config) as sess:
 
             # Load model from ckpt_load_dir
-            FLAGS.embedding_size = 300
+            FLAGS.embedding_size = 200
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path1, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir1, expect_exists=True)
@@ -260,7 +260,7 @@ def main(unused_argv):
             answers_dict1 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
             # Load model from ckpt_load_dir
-            FLAGS.embedding_size = 200
+            FLAGS.embedding_size = 300
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path2, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
