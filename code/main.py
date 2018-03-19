@@ -128,11 +128,7 @@ def main(unused_argv):
     # Initialize bestmodel directory
     bestmodel_dir = os.path.join(FLAGS.train_dir, "best_checkpoint")
 
-    # Define path for glove vecs
-    FLAGS.glove_path = FLAGS.glove_path or os.path.join(DEFAULT_DATA_DIR, "glove.6B.{}d.txt".format(FLAGS.embedding_size))
 
-    # Load embedding matrix and vocab mappings
-    emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
 
     # Get filepaths to train/dev datafiles for tokenized queries, contexts and answers
     train_context_path = os.path.join(FLAGS.data_dir, "train.context")
@@ -151,6 +147,12 @@ def main(unused_argv):
 
     # Split by mode
     if FLAGS.mode == "train":
+
+        # Define path for glove vecs
+        FLAGS.glove_path = FLAGS.glove_path or os.path.join(DEFAULT_DATA_DIR, "glove.6B.{}d.txt".format(FLAGS.embedding_size))
+
+        # Load embedding matrix and vocab mappings
+        emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
 
         # Setup train dir and logfile
         if not os.path.exists(FLAGS.train_dir):
@@ -176,6 +178,12 @@ def main(unused_argv):
 
 
     elif FLAGS.mode == "show_examples":
+        # Define path for glove vecs
+        FLAGS.glove_path = FLAGS.glove_path or os.path.join(DEFAULT_DATA_DIR, "glove.6B.{}d.txt".format(FLAGS.embedding_size))
+
+        # Load embedding matrix and vocab mappings
+        emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
+        
         with tf.Session(config=config) as sess:
 
             # Load best model
@@ -186,6 +194,12 @@ def main(unused_argv):
 
 
     elif FLAGS.mode == "official_eval":
+        # Define path for glove vecs
+        FLAGS.glove_path = FLAGS.glove_path or os.path.join(DEFAULT_DATA_DIR, "glove.6B.{}d.txt".format(FLAGS.embedding_size))
+
+        # Load embedding matrix and vocab mappings
+        emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
+        
         if FLAGS.json_in_path == "":
             raise Exception("For official_eval mode, you need to specify --json_in_path")
         if FLAGS.ckpt_load_dir == "":
