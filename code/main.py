@@ -252,7 +252,7 @@ def main(unused_argv):
             FLAGS.embedding_size = 200
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path1, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
-            initialize_model(sess, qa_model, FLAGS.ckpt_load_dir1, expect_exists=True)
+            initialize_model(sess1, qa_model, FLAGS.ckpt_load_dir1, expect_exists=True)
 
             # Get a predicted answer for each example in the data
             # Return a mapping answers_dict from uuid to answer
@@ -265,7 +265,7 @@ def main(unused_argv):
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path2, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
-            answers_dict2 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+            answers_dict2 = generate_answers(sess2, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
         with tf.Session(config=config) as sess3:
 
@@ -273,14 +273,14 @@ def main(unused_argv):
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path3, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
-            answers_dict3 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+            answers_dict3 = generate_answers(sess3, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
         with tf.Session(config=config) as sess4:
             FLAGS.embedding_size = 50
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path4, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir4, expect_exists=True)
-            answers_dict4 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
+            answers_dict4 = generate_answers(sess4, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
 
             new_answer_dict = {}
