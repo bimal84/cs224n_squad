@@ -229,6 +229,7 @@ def main(unused_argv):
         with tf.Session(config=config) as sess:
 
             # Load model from ckpt_load_dir
+            FLAGS.embedding_size = 300
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir1, expect_exists=True)
 
             # Get a predicted answer for each example in the data
@@ -236,12 +237,15 @@ def main(unused_argv):
             answers_dict1 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
             # Load model from ckpt_load_dir
+            FLAGS.embedding_size = 200
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
             answers_dict2 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+            FLAGS.embedding_size = 100
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
             answers_dict3 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+            FLAGS.embedding_size = 50
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir4, expect_exists=True)
             answers_dict4 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
