@@ -78,6 +78,13 @@ tf.app.flags.DEFINE_string("ckpt_load_dir2", "", "For official_eval_ensemble mod
 tf.app.flags.DEFINE_string("ckpt_load_dir3", "", "For official_eval_ensemble mode, which directory to load the checkpoint fron. You need to specify this for official_eval_ensemble mode.")
 tf.app.flags.DEFINE_string("ckpt_load_dir4", "", "For official_eval_ensemble mode, which directory to load the checkpoint fron. You need to specify this for official_eval_ensemble mode.")
 
+tf.app.flags.DEFINE_string("glove_path1", "", "Path to glove .txt file. Defaults to data/glove.6B.{embedding_size}d.txt")
+tf.app.flags.DEFINE_string("glove_path2", "", "Path to glove .txt file. Defaults to data/glove.6B.{embedding_size}d.txt")
+tf.app.flags.DEFINE_string("glove_path3", "", "Path to glove .txt file. Defaults to data/glove.6B.{embedding_size}d.txt")
+tf.app.flags.DEFINE_string("glove_path4", "", "Path to glove .txt file. Defaults to data/glove.6B.{embedding_size}d.txt")
+
+
+
 FLAGS = tf.app.flags.FLAGS
 os.environ["CUDA_VISIBLE_DEVICES"] = str(FLAGS.gpu)
 
@@ -244,7 +251,7 @@ def main(unused_argv):
 
             # Load model from ckpt_load_dir
             FLAGS.embedding_size = 300
-            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
+            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path1, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir1, expect_exists=True)
 
@@ -254,19 +261,19 @@ def main(unused_argv):
 
             # Load model from ckpt_load_dir
             FLAGS.embedding_size = 200
-            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
+            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path2, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
             answers_dict2 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
             FLAGS.embedding_size = 100
-            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
+            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path3, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
             answers_dict3 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
             FLAGS.embedding_size = 50
-            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path, FLAGS.embedding_size)
+            emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path4, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir4, expect_exists=True)
             answers_dict4 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
