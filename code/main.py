@@ -247,8 +247,7 @@ def main(unused_argv):
         # Read the JSON data from file
         qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
 
-        with tf.Session(config=config) as sess:
-
+        with tf.Session(config=config) as sess1:
             # Load model from ckpt_load_dir
             FLAGS.embedding_size = 200
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path1, FLAGS.embedding_size)
@@ -259,6 +258,8 @@ def main(unused_argv):
             # Return a mapping answers_dict from uuid to answer
             answers_dict1 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        with tf.Session(config=config) as sess2:
+
             # Load model from ckpt_load_dir
             FLAGS.embedding_size = 300
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path2, FLAGS.embedding_size)
@@ -266,12 +267,15 @@ def main(unused_argv):
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
             answers_dict2 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        with tf.Session(config=config) as sess3:
+
             FLAGS.embedding_size = 100
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path3, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
             answers_dict3 = generate_answers(sess, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        with tf.Session(config=config) as sess4:
             FLAGS.embedding_size = 50
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path4, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
