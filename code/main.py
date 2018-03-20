@@ -289,16 +289,49 @@ def main(unused_argv):
 
 
             new_answer_dict = {}
+            all_keys = []
 
             for key, value in answers_dict1.iteritems():
-
+                all_keys.append(key)
                 answer1 = value
-                answer2 = answers_dict2[key]
-                answer3 = answers_dict3[key]
-                answer4 = answers_dict4[key]
+                answer2 = answers_dict2.get( key, "" )
+                answer3 = answers_dict3.get( key, "" )
+                answer4 = answers_dict4.get( key, "" )
 
-                answer = most_common( [answer1, answer2 , answer3 , answer4])
+                tmp = [answer1]
+                if answer2 != "":
+                    tmp.append(answer2)
+                if answer3 != "":
+                    tmp.append(answer3)
+                if answer4 != "":
+                    tmp.append(answer4)
+                answer = most_common(tmp)
                 new_answer_dict[key] = answer
+
+            for key, value in answers_dict2.iteritems():
+                if key not in all_keys :
+                    all_keys.append(key)
+                    answer2 = value
+                    answer3 = answers_dict3.get( key, "" )
+                    answer4 = answers_dict4.get( key, "" )
+
+                    tmp = [answer2]
+                    if answer3 != "":
+                        tmp.append(answer3)
+                    if answer4 != "":
+                        tmp.append(answer4)
+                    answer = most_common(tmp)
+                    new_answer_dict[key] = answer
+
+            for key, value in answers_dict3.iteritems():
+                if key not in all_keys :
+                    all_keys.append(key)
+                    new_answer_dict[key] = value
+
+            for key, value in answers_dict4.iteritems():
+                if key not in all_keys :
+                    all_keys.append(key)
+                    new_answer_dict[key] = value
 
 
             # Write the uuid->answer mapping a to json file in root dir
