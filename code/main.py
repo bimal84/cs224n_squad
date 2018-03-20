@@ -249,6 +249,7 @@ def main(unused_argv):
 
         with tf.Session(config=config) as sess1:
             # Load model from ckpt_load_dir
+            tf.reset_default_graph()
             FLAGS.embedding_size = 200
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path1, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
@@ -261,6 +262,7 @@ def main(unused_argv):
         with tf.Session(config=config) as sess2:
 
             # Load model from ckpt_load_dir
+            tf.reset_default_graph()
             FLAGS.embedding_size = 300
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path2, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
@@ -269,6 +271,7 @@ def main(unused_argv):
 
         with tf.Session(config=config) as sess3:
 
+            tf.reset_default_graph()
             FLAGS.embedding_size = 100
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path3, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
@@ -276,6 +279,7 @@ def main(unused_argv):
             answers_dict3 = generate_answers(sess3, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
         with tf.Session(config=config) as sess4:
+            tf.reset_default_graph()
             FLAGS.embedding_size = 50
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path4, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
