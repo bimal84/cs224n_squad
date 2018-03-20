@@ -22,6 +22,7 @@ import io
 import json
 import sys
 import logging
+import Counter
 
 import tensorflow as tf
 
@@ -88,6 +89,9 @@ tf.app.flags.DEFINE_string("glove_path4", "", "Path to glove .txt file. Defaults
 FLAGS = tf.app.flags.FLAGS
 os.environ["CUDA_VISIBLE_DEVICES"] = str(FLAGS.gpu)
 
+def most_common(lst):
+    data = Counter(lst)
+    return max(lst, key=data.get)
 
 def initialize_model(session, model, train_dir, expect_exists):
     """
@@ -246,7 +250,6 @@ def main(unused_argv):
 
         # Read the JSON data from file
         qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
-
         tf.reset_default_graph()
         with tf.Session(config=config) as sess1:
             # Load model from ckpt_load_dir
@@ -260,6 +263,7 @@ def main(unused_argv):
             # Return a mapping answers_dict from uuid to answer
             answers_dict1 = generate_answers(sess1, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
         tf.reset_default_graph()
         with tf.Session(config=config) as sess2:
 
@@ -270,6 +274,7 @@ def main(unused_argv):
             initialize_model(sess2, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
             answers_dict2 = generate_answers(sess2, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
         tf.reset_default_graph()
         with tf.Session(config=config) as sess3:
 
@@ -279,6 +284,7 @@ def main(unused_argv):
             initialize_model(sess3, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
             answers_dict3 = generate_answers(sess3, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
         tf.reset_default_graph()
         with tf.Session(config=config) as sess4:
             FLAGS.embedding_size = 50
