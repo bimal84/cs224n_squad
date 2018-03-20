@@ -247,9 +247,10 @@ def main(unused_argv):
         # Read the JSON data from file
         qn_uuid_data, context_token_data, qn_token_data = get_json_data(FLAGS.json_in_path)
 
+        tf.reset_default_graph()
         with tf.Session(config=config) as sess1:
             # Load model from ckpt_load_dir
-            tf.reset_default_graph()
+
             FLAGS.embedding_size = 200
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path1, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
@@ -259,27 +260,27 @@ def main(unused_argv):
             # Return a mapping answers_dict from uuid to answer
             answers_dict1 = generate_answers(sess1, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        tf.reset_default_graph()
         with tf.Session(config=config) as sess2:
 
             # Load model from ckpt_load_dir
-            tf.reset_default_graph()
             FLAGS.embedding_size = 300
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path2, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess2, qa_model, FLAGS.ckpt_load_dir2, expect_exists=True)
             answers_dict2 = generate_answers(sess2, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        tf.reset_default_graph()
         with tf.Session(config=config) as sess3:
 
-            tf.reset_default_graph()
             FLAGS.embedding_size = 100
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path3, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
             initialize_model(sess3, qa_model, FLAGS.ckpt_load_dir3, expect_exists=True)
             answers_dict3 = generate_answers(sess3, qa_model, word2id, qn_uuid_data, context_token_data, qn_token_data)
 
+        tf.reset_default_graph()
         with tf.Session(config=config) as sess4:
-            tf.reset_default_graph()
             FLAGS.embedding_size = 50
             emb_matrix, word2id, id2word = get_glove(FLAGS.glove_path4, FLAGS.embedding_size)
             qa_model = QAModel(FLAGS, id2word, word2id, emb_matrix)
