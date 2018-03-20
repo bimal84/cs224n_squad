@@ -22,7 +22,7 @@ import io
 import json
 import sys
 import logging
-import Counter
+from collections import Counter
 
 import tensorflow as tf
 
